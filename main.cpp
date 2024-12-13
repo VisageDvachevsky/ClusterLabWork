@@ -8,24 +8,22 @@
 #include <stdexcept>
 
 struct Task {
-    int id;                       
-    int arrival_time;             
-    int required_processors;      
-    int execution_time;           
+    int id;
+    int arrival_time;
+    int required_processors;
+    int execution_time;
 
-    // тутa приоретет процессов меньшее число процессоров => выше приоритет
     bool operator<(const Task& other) const {
         return required_processors > other.required_processors;
     }
 };
 
-
 struct ClusterStatistics {
-    int total_tasks = 0;         
-    int completed_tasks = 0;     
-    int idle_ticks = 0;           
-    double load_accumulated = 0;  
-    int load_measurements = 0;    
+    int total_tasks = 0;
+    int completed_tasks = 0;
+    int idle_ticks = 0;
+    double load_accumulated = 0;
+    int load_measurements = 0;
 
     void display(int total_processors) const {
         std::cout << "Results:\n";
@@ -48,7 +46,7 @@ public:
     void update_processors() {
         for (auto& time : processor_status_) {
             if (time > 0) {
-                --time;
+                --time;  
             }
         }
         available_processors_ = std::count(processor_status_.begin(), processor_status_.end(), 0);
@@ -56,11 +54,12 @@ public:
 
     bool allocate_task(const Task& task) {
         if (task.required_processors > available_processors_) {
-            return false;
+            return false;  
         }
+
         int allocated = 0;
         for (auto& time : processor_status_) {
-            if (time == 0) {
+            if (time == 0) {  
                 time = task.execution_time;
                 ++allocated;
                 if (allocated == task.required_processors) {
@@ -77,20 +76,19 @@ public:
         stats.load_accumulated += static_cast<double>(used_processors) / total_processors_;
         ++stats.load_measurements;
         if (used_processors == 0) {
-            ++stats.idle_ticks;
+            ++stats.idle_ticks;  
         }
     }
 
-    [[nodiscard]] int get_total_processors() const {
+    int get_total_processors() const {
         return total_processors_;
     }
 
 private:
-    int total_processors_;                   
-    int available_processors_;               
-    std::vector<int> processor_status_;      
+    int total_processors_;
+    int available_processors_;
+    std::vector<int> processor_status_;  
 };
-
 
 class TaskManager {
 public:
@@ -100,7 +98,7 @@ public:
           execution_time_distribution_(min_exec_time, max_exec_time),
           task_id_counter_(1) {
         if (task_spawn_probability_ < 0.0 || task_spawn_probability_ > 1.0) {
-            throw std::invalid_argument("Task spawn probability most between (0;1) КТО ПРОЧИТАЛ ПИДОР");
+            throw std::invalid_argument("Task spawn probability must be between (0;1) КТО ПРОЧИТАЛ ГЕЙ");
         }
     }
 
@@ -113,7 +111,7 @@ public:
                 .execution_time = execution_time_distribution_(random_generator_)
             };
         }
-        return std::nullopt;
+        return std::nullopt;  
     }
 
 private:
@@ -158,18 +156,16 @@ private:
     int max_ticks_;
 
     void process_task_queue() {
-        std::priority_queue<Task> temp_queue;
         while (!task_queue_.empty()) {
             Task task = task_queue_.top();
             task_queue_.pop();
 
             if (!cluster_.allocate_task(task)) {
-                temp_queue.push(task);
+                task_queue_.push(task);
             } else {
                 stats_.completed_tasks++;
             }
         }
-        std::swap(task_queue_, temp_queue);
     }
 };
 
